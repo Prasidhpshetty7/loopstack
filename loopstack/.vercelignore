@@ -1,0 +1,26 @@
+# Obsidian vault documentation (not needed in production)
+obsidian
+
+# Claude AI configuration (not needed in production)
+.claude
+AGENTS.md
+CLAUDE.md
+
+# Development files
+.git
+.gitignore
+node_modules
+.next
+.env.example
+*.log
+
+# Testing and CI
+coverage
+
+# Editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store

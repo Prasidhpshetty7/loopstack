@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loopstack</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body {
+            background:#010305;
+            color:#fff;
+            cursor:none;
+            font-family:'General Sans',-apple-system,sans-serif;
+            overflow-x:hidden;
+        }
+        ::-webkit-scrollbar { width:2px; }
+        ::-webkit-scrollbar-thumb { background:rgba(168,85,247,.3); }
+
+        /* ── SVG Ripple filter (hidden) ── */
+        .svg-defs { position:absolute; width:0; height:0; overflow:hidden; }
+
+        /* ── Fixed galaxy canvas — always behind sections 2-5 ── */
+        #c-galaxy {
+            position:fixed; inset:0;
+            z-index:0; pointer-events:none;
+            /* ripple filter applied via JS */
+        }
+
+        /* ════════ HERO ════════ */
+        .s-hero {
+            position:relative; height:100vh;
+            overflow:hidden; z-index:2;
+        }
+        .s-hero::after {
+            content:''; position:absolute;
+            bottom:0; left:0; right:0; height:40vh;
+            background:linear-gradient(to bottom,transparent,#03000d);
+            z-index:2; pointer-events:none;
+        }
+        #top-gradient {
+            position:absolute; top:-65vh; left:0;
+            width:100vw; height:auto; z-index:1; pointer-events:none;
+        }
+        .hero-content {
+            position:relative; z-index:3;
+            display:flex; flex-direction:column;
+            align-items:center; text-align:center;
+            padding-top:6vh; width:95%; max-width:1100px; margin:0 auto;
+        }
+        .hero-title {
+            font-family:'Playfair Display',Georgia,serif;
+            font-size:2.8rem; font-weight:400;
+            color:#fff; line-height:1.15;
+            margin-bottom:2.2rem; letter-spacing:-0.015em;
+        }
+        .hero-btn {
+            font-family:'Outfit',sans-serif;
+            font-size:1.1rem; font-weight:500;
+            color:#fff; background:rgba(0,0,0,.55);
+            border:1px solid rgba(255,255,255,.18);
+            padding:1.3rem 2.5rem; border-radius:9999px;
+            display:inline-flex; align-items:center; gap:.9rem;
+            cursor:none; backdrop-filter:blur(12px);
+            transition:all .3s cubic-bezier(.16,1,.3,1); outline:none;
+        }
+        .hero-btn:hover { background:rgba(255,255,255,.9); color:#000; }
+        /* ── Scroll hint ── */
+        .hero-scroll-hint { display:flex; flex-direction:column; align-items:center; gap:.8rem; margin-top:.4rem; animation:fadein-hint 1.8s 1.5s both; }
+        @keyframes fadein-hint { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+        .scroll-line { display:block; width:1px; height:44px; background:linear-gradient(to bottom,transparent,rgba(168,85,247,.85),transparent); animation:scroll-pulse 2.2s ease-in-out infinite; transform-origin:top center; }
+        @keyframes scroll-pulse { 0%,100%{transform:scaleY(.45);opacity:.35} 50%{transform:scaleY(1);opacity:1} }
+        .scroll-label { font-family:'General Sans',sans-serif; font-size:.63rem; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+        .blinking-dot {
+            width:10px; height:10px; background:#39FF14;
+            border-radius:50%; position:relative; display:inline-block; flex-shrink:0;
+            animation:pulse-glow 2s infinite ease-in-out;
+        }
+
+        .blinking-dot::after {
+            content:''; position:absolute;
+            top:-5px; left:-5px; right:-5px; bottom:-5px;
+            background:rgba(57,255,20,.4); border-radius:50%;
+            animation:wave-expand 2s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%,100%{opacity:.5;transform:scale(.85);box-shadow:0 0 4px rgba(57,255,20,.3)}
+            50%{opacity:1;transform:scale(1.1);box-shadow:0 0 12px rgba(57,255,20,.9)}
+        }
+        @keyframes wave-expand {
+            0%{transform:scale(.6);opacity:.9} 100%{transform:scale(2.3);opacity:0}
+        }
+        .hero-footer {
+            position:absolute; top:50vh; left:20px; right:20px;
+            width:calc(100% - 40px); transform:translateY(-50%); z-index:3;
+        }
+        .footer-top { display:flex; justify-content:space-between; align-items:flex-end; padding:0 5px; }
+        .footer-title { font-family:'General Sans',sans-serif; font-size:1.4rem; font-weight:400; color:#fff; letter-spacing:-0.015em; }
+        .footer-divider { border:none; height:1px; background:rgba(255,255,255,.2); margin:1.6rem 0; }
+        .footer-bottom { display:flex; justify-content:space-between; align-items:center; padding:0 5px; }
+        .footer-socials { display:flex; gap:1.25rem; align-items:center; flex:1; }
+        .social-icon { color:rgba(255,255,255,.5); transition:all .3s ease; display:inline-flex; text-decoration:none; }
+        .social-icon:hover { color:#fff; transform:translateY(-2px); }
+        .footer-links { display:flex; gap:2.8rem; justify-content:center; flex:2; }
+        .footer-link { font-family:'Outfit',sans-serif; font-size:.95rem; color:#fff; text-decoration:none; letter-spacing:.03em; transition:opacity .3s ease; }
+        .footer-link:hover { opacity:.6; }
+        .footer-copyright { font-family:'Outfit',sans-serif; font-size:.9rem; color:rgba(255,255,255,.4); text-align:right; flex:1; }
+        .hero-logo-wrap {
+            position:absolute; bottom:20px; left:0; right:0; width:100%;
+            padding:0 20px; z-index:4;
+            display:flex; justify-content:center; align-items:center;
+        }
+        .hero-logo-text {
+            font-family:'General Sans',sans-serif;
+            font-size:21.9vw; font-weight:400; color:#fff;
+            letter-spacing:-0.03em; transform:translateX(-20px);
+            line-height:.8; text-align:center; width:100%;
+            pointer-events:none; opacity:.95; white-space:nowrap;
+        }
+        .video-container { position:absolute; bottom:0; left:0; width:100%; height:100%; overflow:hidden; z-index:0; }
+        #bg-video { width:100%; height:110%; object-fit:cover; display:block; will-change:filter,transform; }
+        /* Gentle breathing — applied to container after video ends */
+        @keyframes petal-breathe {
+            0%   { transform:scale(1.000) rotate(0.00deg); filter:brightness(1.00); }
+            18%  { transform:scale(1.011) rotate(0.18deg); filter:brightness(1.03); }
+            38%  { transform:scale(1.005) rotate(-0.12deg); filter:brightness(0.97); }
+            55%  { transform:scale(1.014) rotate(0.22deg); filter:brightness(1.04); }
+            72%  { transform:scale(1.003) rotate(-0.09deg); filter:brightness(0.99); }
+            88%  { transform:scale(1.009) rotate(0.14deg); filter:brightness(1.02); }
+            100% { transform:scale(1.000) rotate(0.00deg); filter:brightness(1.00); }
+        }
+
+
+        /* ════════ TICKER ════════ */
+        .ticker-wrap {
+            position:relative; z-index:2;
+            width:100%; overflow:hidden; padding:18px 0;
+            border-top:1px solid rgba(255,255,255,.05);
+            border-bottom:1px solid rgba(255,255,255,.05);
+            background:rgba(3,0,13,.98);
+        }
+        .ticker-track { display:flex; animation:ticker 40s linear infinite; white-space:nowrap; }
+        .ticker-item {
+            font-family:'General Sans',sans-serif;
+            font-size:.68rem; letter-spacing:.2em; text-transform:uppercase;
+            color:rgba(255,255,255,.1); padding:0 2.5rem;
+            display:inline-flex; align-items:center; gap:2.5rem;
+        }
+        .tick-dot { width:3px; height:3px; border-radius:50%; background:rgba(168,85,247,.6); flex-shrink:0; }
+        @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+        /* ════════ SHARED SECTIONS ════════ */
+        .s-section { position:relative; z-index:2; overflow:hidden; }
+        .s-overlay {
+            position:absolute; inset:0;
+            background:linear-gradient(180deg,rgba(1,3,5,.72) 0%,rgba(1,3,8,.62) 50%,rgba(1,3,5,.72) 100%);
+            z-index:0; pointer-events:none;
+        }
+        .s-canvas { position:absolute; z-index:1; pointer-events:none; }
+        .s-content { position:relative; z-index:2; max-width:1320px; margin:0 auto; padding:0 64px; }
+
+        /* Reveal — clean, no blur (matches reference site feel) */
+        .rev { opacity:0; transform:translateY(28px); transition:opacity .9s cubic-bezier(.05,.9,.1,1), transform .9s cubic-bezier(.05,.9,.1,1); }
+        .rev.in { opacity:1; transform:translateY(0); }
+        .rev-l { opacity:0; transform:translateX(-28px); transition:opacity .9s cubic-bezier(.05,.9,.1,1), transform .9s cubic-bezier(.05,.9,.1,1); }
+        .rev-l.in { opacity:1; transform:translateX(0); }
+        .d1{transition-delay:.08s}.d2{transition-delay:.18s}.d3{transition-delay:.28s}
+        .d4{transition-delay:.38s}.d5{transition-delay:.48s}.d6{transition-delay:.58s}
+
+        /* Common type */
+        .s-label {
+            display:block;
+            font-family:'General Sans',sans-serif; font-size:.68rem; font-weight:500;
+            letter-spacing:.22em; text-transform:uppercase;
+            color:rgba(168,85,247,.75); margin-bottom:1.4rem;
+        }
+        .s-h2 {
+            font-family:'Inter',sans-serif;
+            font-size:clamp(2.8rem,5.2vw,5.2rem);
+            font-weight:700; line-height:1.06; letter-spacing:-0.03em;
+            color:#fff; margin-bottom:1.4rem;
+        }
+        .s-body {
+            font-family:'Inter',sans-serif;
+            font-size:.97rem; font-weight:400; line-height:1.78;
+            color:rgba(255,255,255,.42); max-width:460px;
+        }
+
+        /* ════════ S2 — PLATFORM ════════ */
+        .s-about { padding:140px 0 130px; }
+        .s-about-grid { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+        .feat-list { list-style:none; margin-top:2.8rem; }
+        .feat-row {
+            display:grid; grid-template-columns:40px 1fr;
+            align-items:center; gap:.9rem;
+            padding:1rem 0; border-top:1px solid rgba(255,255,255,.06);
+            font-family:'Inter',sans-serif; font-size:.9rem; color:rgba(255,255,255,.45);
+            transition:color .22s;
+        }
+        .feat-row:hover { color:rgba(255,255,255,.85); }
+        .feat-row:last-child { border-bottom:1px solid rgba(255,255,255,.06); }
+        .feat-num { font-family:'General Sans',sans-serif; font-size:.6rem; letter-spacing:.12em; color:rgba(168,85,247,.45); }
+        .blob-wrap { position:relative; height:540px; }
+        #c-blob { width:100%; height:100%; display:block; }
+
+        /* ════════ S3 — HOW IT WORKS ════════ */
+        .s-process { padding:140px 0; }
+        #c-vortex { right:-5%; top:50%; transform:translateY(-50%); width:50%; height:80%; opacity:.65; }
+        .proc-header { display:grid; grid-template-columns:1fr 1fr; align-items:end; gap:40px; margin-bottom:80px; }
+        .proc-header .s-h2 { margin-bottom:0; }
+        .proc-note { font-family:'Inter',sans-serif; font-size:.93rem; font-weight:400; color:rgba(255,255,255,.35); line-height:1.75; max-width:310px; }
+        .proc-step {
+            display:grid; grid-template-columns:80px 1fr auto;
+            align-items:start; gap:32px;
+            padding:44px 0; border-top:1px solid rgba(255,255,255,.07);
+        }
+        .proc-step:last-child { border-bottom:1px solid rgba(255,255,255,.07); }
+        .ps-num { font-family:'General Sans',sans-serif; font-size:4.5rem; font-weight:400; line-height:1; letter-spacing:-0.04em; color:rgba(255,255,255,.06); user-select:none; }
+        .ps-name { font-family:'Inter',sans-serif; font-size:1.75rem; font-weight:600; letter-spacing:-0.025em; margin-bottom:.65rem; color:#fff; }
+        .ps-desc { font-family:'Inter',sans-serif; font-size:.9rem; font-weight:400; line-height:1.78; color:rgba(255,255,255,.38); max-width:500px; }
+        .ps-tag { font-family:'General Sans',sans-serif; font-size:.62rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:#a855f7; padding:.35rem 1rem; border:1px solid rgba(168,85,247,.28); border-radius:9999px; white-space:nowrap; margin-top:.3rem; }
+
+        /* ════════ S4 — METRICS ════════ */
+        .s-metrics { min-height:100vh; display:flex; align-items:center; }
+        #c-rings { inset:0; width:100%; height:100%; opacity:.45; }
+        .metrics-header { margin-bottom:80px; }
+        .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid rgba(255,255,255,.07); border-left:1px solid rgba(255,255,255,.07); }
+        .stat-cell { padding:48px 40px; border-right:1px solid rgba(255,255,255,.07); border-bottom:1px solid rgba(255,255,255,.07); display:flex; flex-direction:column; gap:.5rem; }
+        .stat-val { font-family:'Inter',sans-serif; font-size:clamp(2.8rem,4vw,4.2rem); font-weight:700; letter-spacing:-0.04em; color:#fff; }
+        .stat-val .acc { color:#a855f7; }
+        .stat-lbl { font-family:'Inter',sans-serif; font-size:.74rem; font-weight:400; color:rgba(255,255,255,.28); letter-spacing:.04em; }
+
+        /* ════════ S5 — CONNECT ════════ */
+        .s-connect { min-height:100vh; display:flex; flex-direction:column; }
+        .connect-body { position:relative; z-index:2; flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:120px 40px 60px; }
+        .connect-h { font-size:clamp(3.5rem,7.5vw,8rem); letter-spacing:-0.04em; }
+        .connect-desc { font-family:'Inter',sans-serif; font-size:.97rem; font-weight:400; color:rgba(255,255,255,.38); max-width:400px; line-height:1.75; margin-bottom:3.5rem; }
+        .connect-form { display:flex; width:100%; max-width:480px; margin-bottom:1.4rem; }
+        .connect-input { flex:1; font-family:'Inter',sans-serif; font-size:.95rem; color:#fff; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-right:none; padding:1.1rem 1.5rem; border-radius:9999px 0 0 9999px; outline:none; transition:border-color .3s; }
+        .connect-input::placeholder { color:rgba(255,255,255,.18); }
+        .connect-input:focus { border-color:rgba(168,85,247,.5); }
+        .connect-submit { font-family:'Inter',sans-serif; font-size:.87rem; font-weight:600; letter-spacing:.02em; color:#fff; background:#7c3aed; border:1px solid #7c3aed; padding:1.1rem 1.8rem; border-radius:0 9999px 9999px 0; cursor:none; outline:none; white-space:nowrap; transition:background .3s; }
+        .connect-submit:hover { background:#a855f7; border-color:#a855f7; }
+        .connect-alt { font-family:'Inter',sans-serif; font-size:.8rem; color:rgba(255,255,255,.2); display:flex; align-items:center; gap:1.5rem; margin-bottom:3rem; }
+        .connect-alt a { color:rgba(255,255,255,.42); text-decoration:none; transition:color .25s; }
+        .connect-alt a:hover { color:#fff; }
+        .connect-alt .sep { width:1px; height:12px; background:rgba(255,255,255,.1); }
+        .connect-socials { display:flex; gap:1.5rem; align-items:center; }
+        .connect-wm-wrap { position:relative; z-index:2; width:100%; padding:0 20px 16px; display:flex; justify-content:center; align-items:flex-end; overflow:hidden; }
+        .connect-wm { font-family:'General Sans',sans-serif; font-size:21.9vw; font-weight:400; color:#fff; letter-spacing:-0.03em; line-height:.78; text-align:center; width:100%; pointer-events:none; opacity:.035; white-space:nowrap; }
+
+
+        .hero-title .word-wrapper { display:inline-block; overflow:hidden; vertical-align:bottom; padding-bottom:.15em; margin-bottom:-.15em; }
+        .hero-title .word-inner { display:inline-block; opacity:0; transform:translateY(105%); filter:blur(20px); animation:word-reveal 1.3s cubic-bezier(.05,.9,.1,1) forwards; }
+        @keyframes word-reveal { 0%{opacity:0;transform:translateY(105%);filter:blur(20px)} 30%{opacity:1} 100%{opacity:1;transform:translateY(0);filter:blur(0)} }
+        .hero-logo-text .letter-wrapper { display:inline-block; overflow:hidden; vertical-align:bottom; line-height:.8; }
+        .hero-logo-text .letter-inner { display:inline-block; opacity:0; transform:translateX(-105%); filter:blur(20px); animation:letter-reveal 1.2s cubic-bezier(.05,.9,.1,1) forwards; }
+        @keyframes letter-reveal { 0%{opacity:0;transform:translateX(-105%);filter:blur(20px)} 25%{opacity:1} 100%{opacity:.95;transform:translateX(0);filter:blur(0)} }
+
+        /* ════════ CURSORS ════════ */
+        .glass-cursor-card { position:fixed; top:0; left:0; z-index:99999; pointer-events:none; padding:.75rem 1.5rem; background:rgba(168,85,247,.1); backdrop-filter:blur(14px); border:1px solid rgba(168,85,247,.25); border-radius:9999px; transform:translate(-50%,-50%) scale(0); opacity:0; will-change:transform,opacity; transition:opacity .4s cubic-bezier(.16,1,.3,1); }
+        .glass-cursor-card.active { opacity:1; }
+        .cursor-card-text { font-family:'General Sans',sans-serif; font-size:.85rem; font-weight:500; letter-spacing:.06em; color:#c084fc; text-transform:uppercase; white-space:nowrap; }
+        .cursor-card-text .tw { color:#fff; }
+        .cursor-ring-outline { position:fixed; top:0; left:0; width:48px; height:48px; border:1.5px solid rgba(168,85,247,.5); border-radius:50%; z-index:99998; pointer-events:none; transform:translate(-50%,-50%) scale(0); opacity:0; will-change:transform,opacity; transition:opacity .4s cubic-bezier(.16,1,.3,1), border-color .4s ease; }
+        .cursor-ring-outline.active { opacity:1; }
+        .cursor-ring-outline.expanded { border-color:rgba(168,85,247,.15); }
+    </style>
+</head>
+<body>
+
+<!-- Hidden SVG filter definition for water ripple -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+    <defs>
+        <filter id="ripple-filter" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence id="t-node" type="turbulence" baseFrequency="0.004 0.004" numOctaves="4" seed="8" result="noise"/>
+            <feDisplacementMap id="d-node" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+    </defs>
+</svg>
+
+<!-- Fixed galaxy particle background — always behind sections 2-5 -->
+<canvas id="c-galaxy"></canvas>
+
+<!-- Global cursors -->
+<div id="cursor-ring" class="cursor-ring-outline"></div>
+<div id="glass-card" class="glass-cursor-card">
+    <span class="cursor-card-text"><span class="tw">Say</span> Hello!</span>
+</div>
+
+<!-- ═══════════════════════════════
+     SECTION 1 — HERO
+═══════════════════════════════ -->
+<section class="s-hero">
+    <img src="https://api.getlayers.ai/storage/v1/object/public/public/assets/loopstack-f8c64439bf/black_gradient.svg" alt="" id="top-gradient">
+    <main class="hero-content">
+        <h1 class="hero-title">Build the loop<br>that never breaks.</h1>
+        <div class="hero-scroll-hint">
+            <span class="scroll-line"></span>
+            <span class="scroll-label">Scroll to explore</span>
+        </div>
+    </main>
+    <footer class="hero-footer">
+        <div class="footer-top">
+            <h2 class="footer-title">Stay in Touch</h2>
+            <h2 class="footer-title">Think. Build. Repeat.</h2>
+        </div>
+        <hr class="footer-divider">
+        <div class="footer-bottom">
+            <div class="footer-socials">
+                <a href="#" aria-label="LinkedIn" class="social-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+                <a href="#" aria-label="X" class="social-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733-16z"/><path d="M4 20l6.768-6.768m2.46-2.46l6.772-6.772"/></svg></a>
+                <a href="#" aria-label="Instagram" class="social-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+            </div>
+            <nav class="footer-links">
+                <a href="#build" class="footer-link">About</a>
+                <a href="#process" class="footer-link">Features</a>
+                <a href="#manifesto" class="footer-link">Pricing</a>
+                <a href="#connect" class="footer-link">Contact</a>
+            </nav>
+            <div class="footer-copyright">© 2026 Loopstack</div>
+        </div>
+    </footer>
+    <div class="hero-logo-wrap">
+        <h2 class="hero-logo-text">Loopstack</h2>
+    </div>
+    <div class="video-container">
+        <video autoplay muted playsinline id="bg-video">
+            <source src="https://api.getlayers.ai/storage/v1/object/public/public/assets/loopstack-f8c64439bf/flower.mp4" type="video/mp4">
+        </video>
+    </div>
+</section>
+
+<!-- Ticker strip -->
+<div class="ticker-wrap" aria-hidden="true">
+    <div class="ticker-track">
+        <span class="ticker-item">Build faster <span class="tick-dot"></span></span>
+        <span class="ticker-item">Ship smarter <span class="tick-dot"></span></span>
+        <span class="ticker-item">Loop forever <span class="tick-dot"></span></span>
+        <span class="ticker-item">Zero config <span class="tick-dot"></span></span>
+        <span class="ticker-item">Edge native <span class="tick-dot"></span></span>
+        <span class="ticker-item">AI powered <span class="tick-dot"></span></span>
+        <span class="ticker-item">Open beta 2026 <span class="tick-dot"></span></span>
+        <span class="ticker-item">Build faster <span class="tick-dot"></span></span>
+        <span class="ticker-item">Ship smarter <span class="tick-dot"></span></span>
+        <span class="ticker-item">Loop forever <span class="tick-dot"></span></span>
+        <span class="ticker-item">Zero config <span class="tick-dot"></span></span>
+        <span class="ticker-item">Edge native <span class="tick-dot"></span></span>
+        <span class="ticker-item">AI powered <span class="tick-dot"></span></span>
+        <span class="ticker-item">Open beta 2026 <span class="tick-dot"></span></span>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════
+     SECTION 2 — PLATFORM
+═══════════════════════════════ -->
+<section class="s-section s-about" id="platform">
+    <div class="s-overlay"></div>
+    <div class="s-content">
+        <div>
+            <p class="s-label rev">— Platform</p>
+            <h2 class="s-h2 rev d1">Build faster.<br>Ship smarter.<br>Loop forever.</h2>
+            <p class="s-body rev d2">Loopstack eliminates the gap between writing code and running it in production. One platform. Infinite iterations. Zero ceremony.</p>
+            <ul class="feat-list">
+                <li class="feat-row rev d2"><span class="feat-num">01</span><span>AI-powered automation &amp; suggestions</span></li>
+                <li class="feat-row rev d3"><span class="feat-num">02</span><span>Zero-config deployment to global edge</span></li>
+                <li class="feat-row rev d3"><span class="feat-num">03</span><span>Real-time multiplayer collaboration</span></li>
+                <li class="feat-row rev d4"><span class="feat-num">04</span><span>Blazing-fast serverless runtime</span></li>
+                <li class="feat-row rev d4"><span class="feat-num">05</span><span>Atomic deployments &amp; instant rollbacks</span></li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+
+<!-- ═══════════════════════════════
+     SECTION 3 — HOW IT WORKS
+     (Black hole vortex 3D)
+═══════════════════════════════ -->
+<section class="s-section s-process" id="process">
+    <div class="s-overlay"></div>
+    <canvas id="c-vortex" class="s-canvas"></canvas>
+    <div class="s-content">
+        <div class="proc-header">
+            <div>
+                <p class="s-label rev">— How it works</p>
+                <h2 class="s-h2 rev d1">Three steps.<br>No bottlenecks.</h2>
+            </div>
+            <p class="proc-note rev d2">From first commit to global production in minutes, not days.</p>
+        </div>
+        <div>
+            <div class="proc-step">
+                <div class="ps-num rev">01</div>
+                <div class="rev d1">
+                    <h3 class="ps-name">Connect</h3>
+                    <p class="ps-desc">Drop in your repository. Loopstack reads your stack, maps your dependencies, and configures everything automatically. No YAML. No Docker. No prayers.</p>
+                </div>
+                <span class="ps-tag rev d2">Instant</span>
+            </div>
+            <div class="proc-step">
+                <div class="ps-num rev">02</div>
+                <div class="rev d1">
+                    <h3 class="ps-name">Loop</h3>
+                    <p class="ps-desc">Write code, push, watch it work. Loopstack runs your tests, optimises your bundle, and previews every change in a dedicated environment before it touches production.</p>
+                </div>
+                <span class="ps-tag rev d2">Automated</span>
+            </div>
+            <div class="proc-step">
+                <div class="ps-num rev">03</div>
+                <div class="rev d1">
+                    <h3 class="ps-name">Ship</h3>
+                    <p class="ps-desc">One click. Global edge. Atomic deployments with instant rollbacks. Your code is everywhere in under 30 seconds — and if anything breaks, you're back in one more.</p>
+                </div>
+                <span class="ps-tag rev d2">30 sec</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════
+     SECTION 4 — METRICS
+     (Orbital ring nebula 3D)
+═══════════════════════════════ -->
+<section class="s-section s-metrics" id="metrics">
+    <div class="s-overlay"></div>
+    <canvas id="c-rings" class="s-canvas"></canvas>
+    <div class="s-content" style="padding-top:130px;padding-bottom:130px;width:100%;">
+        <div class="metrics-header">
+            <p class="s-label rev">— By the numbers</p>
+            <h2 class="s-h2 rev d1">Performance<br>you can measure.</h2>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-cell rev"><span class="stat-val">10<span class="acc">ms</span></span><span class="stat-lbl">Global edge latency</span></div>
+            <div class="stat-cell rev d2"><span class="stat-val">99<span class="acc">.99%</span></span><span class="stat-lbl">Uptime SLA</span></div>
+            <div class="stat-cell rev d3"><span class="stat-val">∞</span><span class="stat-lbl">Deploy iterations</span></div>
+            <div class="stat-cell rev d4"><span class="stat-val">30<span class="acc">s</span></span><span class="stat-lbl">Time to global</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════
+     SECTION 5 — CONNECT
+═══════════════════════════════ -->
+<section class="s-section s-connect" id="connect">
+    <div class="s-overlay"></div>
+    <div class="connect-body">
+        <p class="s-label rev">— Get early access</p>
+        <h2 class="s-h2 connect-h rev d1">Ready to<br>loop in?</h2>
+        <p class="connect-desc rev d2">Join the closed beta. Shape the product. Ship with the team building the future of deployment.</p>
+        <form class="connect-form rev d3" onsubmit="return false">
+            <input type="email" class="connect-input" placeholder="you@awesome.com" autocomplete="email">
+            <button type="submit" class="connect-submit">Join beta →</button>
+        </form>
+        <div class="connect-alt rev d4">
+            <a href="#">Schedule a call</a>
+            <span class="sep"></span>
+            <a href="mailto:hello@loopstack.io">hello@loopstack.io</a>
+        </div>
+        <div class="connect-socials rev d5">
+            <a href="#" aria-label="LinkedIn" class="social-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+            <a href="#" aria-label="X" class="social-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733-16z"/><path d="M4 20l6.768-6.768m2.46-2.46l6.772-6.772"/></svg></a>
+        </div>
+    </div>
+    <div class="connect-wm-wrap"><p class="connect-wm">Loopstack</p></div>
+</section>
+
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════
+   GALAXY PARTICLE BACKGROUND — Vesper style
+   Near-black bg · teal-green arms · purple core
+   Flat disk view matching reference screenshots
+═══════════════════════════════════════════════ */
+(function initGalaxy() {
+    const canvas = document.getElementById('c-galaxy');
+    const R = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
+    R.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    R.setSize(innerWidth, innerHeight);
+    R.setClearColor(0x010305, 1);
+
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 500);
+    cam.position.set(0, 8, 22);
+    cam.lookAt(0, 0, 0);
+
+    /* ── Spiral arms — teal-green outer, cyan mid, purple center ── */
+    const ARM = 3, PER_ARM = 5000, SCATTERED = 3500;
+    const TOTAL = ARM * PER_ARM + SCATTERED;
+    const pos = new Float32Array(TOTAL * 3);
+    const col = new Float32Array(TOTAL * 3);
+    let pi = 0;
+
+    for (let a = 0; a < ARM; a++) {
+        const offset = (a / ARM) * Math.PI * 2;
+        for (let s = 0; s < PER_ARM; s++) {
+            const t = s / PER_ARM;
+            const angle = offset + t * Math.PI * 4.0 + (Math.random() - 0.5) * 1.0;
+            const r = 0.3 + t * 20 + (Math.random() - 0.5) * 1.8;
+            const y = (Math.random() - 0.5) * (1.0 - t) * 1.5;
+            pos[pi*3]   = Math.cos(angle) * r;
+            pos[pi*3+1] = y;
+            pos[pi*3+2] = Math.sin(angle) * r;
+
+            const brt = 0.7 + Math.random() * 0.3;
+            if (t < 0.12) {
+                col[pi*3]   = (0.5 + Math.random() * 0.3) * brt;
+                col[pi*3+1] = 0.05 * brt;
+                col[pi*3+2] = (0.95 + Math.random() * 0.05) * brt;
+            } else if (t < 0.35) {
+                const blend = (t - 0.12) / 0.23;
+                col[pi*3]   = (0.4 * (1-blend)) * brt;
+                col[pi*3+1] = (0.2 * (1-blend) + 0.75 * blend) * brt;
+                col[pi*3+2] = brt;
+            } else {
+                const gBrt = 0.75 + Math.random() * 0.25;
+                col[pi*3]   = 0.02 * gBrt;
+                col[pi*3+1] = (0.85 + Math.random() * 0.15) * gBrt;
+                col[pi*3+2] = (0.45 + Math.random() * 0.2) * gBrt;
+            }
+            pi++;
+        }
+    }
+
+    /* ── Scattered halo ── */
+    for (let i = pi; i < TOTAL; i++) {
+        const rr = 8 + Math.random() * 28;
+        const th = Math.random() * Math.PI * 2;
+        const ph = Math.acos(2 * Math.random() - 1);
+        pos[i*3]   = rr * Math.sin(ph) * Math.cos(th);
+        pos[i*3+1] = rr * Math.cos(ph) * 0.15;
+        pos[i*3+2] = rr * Math.sin(ph) * Math.sin(th);
+        const brt = 0.25 + Math.random() * 0.55;
+        const isTeal = Math.random() < 0.72;
+        col[i*3]   = isTeal ? 0.02 * brt : 0.3 * brt;
+        col[i*3+1] = isTeal ? brt        : 0.1 * brt;
+        col[i*3+2] = isTeal ? 0.5 * brt  : brt;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aColor',   new THREE.BufferAttribute(col, 3));
+
+    /* ── ShaderMaterial — round dots + cursor fade-out ── */
+    const gMouse = { value: new THREE.Vector2(9999, 9999) };
+    const mat = new THREE.ShaderMaterial({
+        uniforms: { uMouse: gMouse },
+        vertexShader: `
+            attribute vec3 aColor;
+            varying vec3  vColor;
+            varying float vAlpha;
+            uniform vec2  uMouse;
+            void main() {
+                vColor = aColor;
+                vec4 mv   = modelViewMatrix * vec4(position, 1.0);
+                vec4 proj = projectionMatrix * mv;
+                vec2 ndc  = proj.xy / proj.w;
+                // Fade out near cursor — particles simply vanish
+                float d  = distance(ndc, uMouse);
+                vAlpha   = smoothstep(0.0, 0.22, d);
+                gl_PointSize = clamp(180.0 / -mv.z, 1.0, 3.5);
+                gl_Position  = proj;
+            }
+        `,
+        fragmentShader: `
+            varying vec3  vColor;
+            varying float vAlpha;
+            void main() {
+                vec2  pc = gl_PointCoord - 0.5;
+                float r  = length(pc);
+                if (r > 0.5) discard;
+                float a = (1.0 - smoothstep(0.1, 0.5, r)) * 0.95 * vAlpha;
+                gl_FragColor = vec4(vColor, a);
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+    });
+
+    const stars = new THREE.Points(geo, mat);
+    scene.add(stars);
+
+    /* ── Core purple glow ── */
+    [[0x3311aa, 0.045], [0x0033aa, 0.025]].forEach(([c, op]) => {
+        const g = new THREE.SphereGeometry(3.5 + Math.random() * 2, 12, 12);
+        const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: op, side: THREE.BackSide });
+        scene.add(new THREE.Mesh(g, m));
+    });
+
+    // Track global cursor → NDC for galaxy
+    const gMouseNDC = new THREE.Vector2(9999, 9999);
+    window.addEventListener('mousemove', e => {
+        gMouseNDC.set(
+            (e.clientX / innerWidth)  * 2 - 1,
+           -(e.clientY / innerHeight) * 2 + 1
+        );
+    }, { passive: true });
+
+    let t = 0;
+    (function tick() {
+        requestAnimationFrame(tick);
+        t += 0.00015;
+        stars.rotation.y = t;
+        gMouse.value.copy(gMouseNDC); // update fade uniform
+        R.render(scene, cam);
+    })();
+
+    window.addEventListener('resize', () => {
+        R.setSize(innerWidth, innerHeight);
+        cam.aspect = innerWidth / innerHeight;
+        cam.updateProjectionMatrix();
+    });
+})();
+
+
+/* Water ripple removed — cursor interaction handled in galaxy shader */
+
+/* ═══════════════════════════════════════════════
+   PARTICLE TORUS  (Section 2)
+   Custom GLSL: round dots via gl_PointCoord
+   GPU cursor repulsion via uMouse uniform
+═══════════════════════════════════════════════ */
+(function initTorus() {
+    const canvas = document.getElementById('c-blob');
+    if (!canvas) return;
+    const W = canvas.parentElement.clientWidth || 600;
+    const H = canvas.parentElement.clientHeight || 540;
+
+    const R = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true });
+    R.setPixelRatio(Math.min(devicePixelRatio, 1.8));
+    R.setSize(W, H);
+    R.setClearColor(0, 0);
+
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(52, W / H, 0.1, 100);
+    cam.position.set(0, 2.5, 8.0);  // closer — bigger feel
+    cam.lookAt(0, 0, 0);
+
+    const N = 22000;
+    const MAJ = 3.2;   // bigger ring
+    const MIN = 1.2;   // thicker tube
+
+    const pos = new Float32Array(N * 3);
+    const col = new Float32Array(N * 3);
+
+    for (let i = 0; i < N; i++) {
+        const u = Math.random() * Math.PI * 2;
+        const v = Math.random() * Math.PI * 2;
+        const rJit = MIN * (0.45 + Math.random() * 0.7);
+        const cx = MAJ * Math.cos(u);
+        const cz = MAJ * Math.sin(u);
+        const x = cx + rJit * Math.cos(v) * Math.cos(u);
+        const z = cz + rJit * Math.cos(v) * Math.sin(u);
+        const y = rJit * Math.sin(v);
+        pos[i*3] = x; pos[i*3+1] = y; pos[i*3+2] = z;
+
+        const normY = y / (MIN * 0.9);
+        const brt = 0.6 + Math.random() * 0.4;
+        if (normY > 0.28) {
+            // TOP → teal-green
+            col[i*3]   = 0.02 * brt;
+            col[i*3+1] = (0.8 + Math.random() * 0.2) * brt;
+            col[i*3+2] = (0.42 + Math.random() * 0.18) * brt;
+        } else if (normY < -0.28) {
+            // BOTTOM → blue-purple
+            col[i*3]   = (0.22 + Math.random() * 0.18) * brt;
+            col[i*3+1] = 0.02 * brt;
+            col[i*3+2] = (0.85 + Math.random() * 0.15) * brt;
+        } else {
+            // SIDES → cyan
+            col[i*3]   = 0.02 * brt;
+            col[i*3+1] = (0.55 + Math.random() * 0.3) * brt;
+            col[i*3+2] = (0.88 + Math.random() * 0.12) * brt;
+        }
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aColor',   new THREE.BufferAttribute(col, 3));
+
+    const uMouse = { value: new THREE.Vector2(9999, 9999) };
+
+    const mat = new THREE.ShaderMaterial({
+        uniforms: { uMouse },
+        vertexShader: `
+            attribute vec3 aColor;
+            varying vec3  vColor;
+            uniform vec2  uMouse;
+
+            void main() {
+                vColor = aColor;
+                vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+                vec4 proj  = projectionMatrix * mvPos;
+                vec2 ndc   = proj.xy / proj.w;
+
+                // Smooth repulsion away from cursor in screen space
+                float d   = distance(ndc, uMouse);
+                float str = smoothstep(0.42, 0.0, d) * 2.0;
+                vec2 push = normalize(ndc - uMouse + vec2(0.00001));
+                float dep = max(-mvPos.z, 0.1);
+                mvPos.x  += push.x * str * dep * 0.20;
+                mvPos.y  += push.y * str * dep * 0.20;
+
+                // Scale point size with perspective depth
+                gl_PointSize = 2.4 * (270.0 / dep);
+                gl_Position  = projectionMatrix * mvPos;
+            }
+        `,
+        fragmentShader: `
+            varying vec3 vColor;
+            void main() {
+                // Circular soft dot — discard corners (no squares)
+                vec2  pc = gl_PointCoord - 0.5;
+                float r  = length(pc);
+                if (r > 0.5) discard;
+                float alpha = (1.0 - smoothstep(0.18, 0.5, r)) * 0.9;
+                gl_FragColor = vec4(vColor, alpha);
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+    });
+
+    const torus = new THREE.Points(geo, mat);
+    torus.rotation.x = 0.40;
+    scene.add(torus);
+
+    // Track mouse on canvas → NDC coords
+    const mouseNDC = new THREE.Vector2(9999, 9999);
+    canvas.addEventListener('mousemove', e => {
+        const rc = canvas.getBoundingClientRect();
+        mouseNDC.set(
+            ((e.clientX - rc.left) / rc.width)  * 2 - 1,
+           -((e.clientY - rc.top)  / rc.height) * 2 + 1
+        );
+    });
+    canvas.addEventListener('mouseleave', () => mouseNDC.set(9999, 9999));
+
+    let t = 0;
+    (function tick() {
+        requestAnimationFrame(tick);
+        t += 0.006;
+        torus.rotation.y += 0.0028;
+        torus.rotation.z  = Math.sin(t * 0.22) * 0.06;
+        uMouse.value.copy(mouseNDC);
+        R.render(scene, cam);
+    })();
+
+    window.addEventListener('resize', () => {
+        const nW = canvas.parentElement.clientWidth || 600;
+        const nH = canvas.parentElement.clientHeight || 540;
+        R.setSize(nW, nH); cam.aspect = nW / nH; cam.updateProjectionMatrix();
+    });
+})();
+
+
+
+/* ═══════════════════════════════════════════════
+   BLACK HOLE / VORTEX  (Section 3)
+   GPU-animated: 5000 particles in Keplerian orbits
+   Teal (outer) → purple (mid) → white-hot (inner)
+   All motion runs on GPU via vertex shader
+═══════════════════════════════════════════════ */
+(function initVortex() {
+    const canvas = document.getElementById('c-vortex');
+    if (!canvas) return;
+    const W = innerWidth * 0.55, H = innerHeight * 0.8;
+    canvas.width = W; canvas.height = H;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+
+    const R = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    R.setPixelRatio(Math.min(devicePixelRatio, 2));
+    R.setSize(W, H);
+    R.setClearColor(0, 0);
+
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(50, W / H, 0.1, 100);
+    cam.position.set(0, 9, 14);
+    cam.lookAt(0, 0, 0);
+
+    const COUNT = 5000;
+    const aRad = new Float32Array(COUNT);   // radius
+    const aAng = new Float32Array(COUNT);   // base angle
+    const aSpd = new Float32Array(COUNT);   // angular speed (Keplerian ~1/√r)
+    const aH   = new Float32Array(COUNT);   // vertical offset
+    const aCol = new Float32Array(COUNT * 3);
+
+    for (let i = 0; i < COUNT; i++) {
+        const r = 0.15 + Math.pow(Math.random(), 0.55) * 9.5;
+        aRad[i] = r;
+        aAng[i] = Math.random() * Math.PI * 2;
+        aSpd[i] = 0.9 / Math.sqrt(r + 0.01); // Keplerian
+        aH[i]   = (Math.random() - 0.5) * 0.25 * Math.min(r / 2, 1);
+
+        const t = 1 - r / 9.5;
+        if (t > 0.75) {
+            // Very inner: white-hot glow
+            const br = t * 1.2;
+            aCol[i*3] = br; aCol[i*3+1] = br * 0.8; aCol[i*3+2] = br;
+        } else if (t > 0.35) {
+            // Mid: vivid purple
+            const v = (t - 0.35) / 0.4;
+            aCol[i*3] = 0.4 + v * 0.4; aCol[i*3+1] = 0.0; aCol[i*3+2] = 0.7 + v * 0.3;
+        } else {
+            // Outer: teal/cyan
+            const v = t / 0.35;
+            aCol[i*3] = v * 0.1; aCol[i*3+1] = 0.4 + v * 0.4; aCol[i*3+2] = 0.7 + v * 0.3;
+        }
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('aRad', new THREE.BufferAttribute(aRad, 1));
+    geo.setAttribute('aAng', new THREE.BufferAttribute(aAng, 1));
+    geo.setAttribute('aSpd', new THREE.BufferAttribute(aSpd, 1));
+    geo.setAttribute('aH',   new THREE.BufferAttribute(aH,   1));
+    geo.setAttribute('color', new THREE.BufferAttribute(aCol, 3));
+
+    const mat = new THREE.ShaderMaterial({
+        uniforms: { uTime: { value: 0 } },
+        vertexShader: `
+            attribute float aRad;
+            attribute float aAng;
+            attribute float aSpd;
+            attribute float aH;
+            attribute vec3 color;
+            uniform float uTime;
+            varying vec3 vColor;
+            varying float vAlpha;
+            void main() {
+                float angle = aAng + aSpd * uTime;
+                vec3 p = vec3(cos(angle) * aRad, aH, sin(angle) * aRad);
+                vColor = color;
+                float nearCenter = 1.0 - clamp(aRad / 9.5, 0.0, 1.0);
+                vAlpha = 0.55 + nearCenter * 0.45;
+                vec4 mvPos = modelViewMatrix * vec4(p, 1.0);
+                gl_PointSize = (2.5 + nearCenter * 3.0) * (300.0 / -mvPos.z);
+                gl_Position = projectionMatrix * mvPos;
+            }
+        `,
+        fragmentShader: `
+            varying vec3 vColor;
+            varying float vAlpha;
+            void main() {
+                vec2 c = 2.0 * gl_PointCoord - 1.0;
+                float d = dot(c, c);
+                if (d > 1.0) discard;
+                float a = vAlpha * (1.0 - sqrt(d));
+                gl_FragColor = vec4(vColor, a);
+            }
+        `,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+    });
+
+    const vortex = new THREE.Points(geo, mat);
+    scene.add(vortex);
+
+    // Accretion disk rings
+    [1.5, 3.0, 5.5].forEach((r, i) => {
+        const g = new THREE.TorusGeometry(r, 0.012, 8, 256);
+        const m = new THREE.MeshBasicMaterial({ color: i === 0 ? 0xaa55ff : 0x225599, transparent: true, opacity: 0.12 - i * 0.03 });
+        scene.add(new THREE.Mesh(g, m));
+    });
+
+    // Dark center sphere
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshBasicMaterial({ color: 0x000000 })));
+
+    let t = 0;
+    (function tick() {
+        requestAnimationFrame(tick);
+        t += 0.016;
+        mat.uniforms.uTime.value = t;
+        vortex.rotation.x = 0.28; // tilt for depth
+        R.render(scene, cam);
+    })();
+
+    window.addEventListener('resize', () => {
+        const nW = innerWidth * 0.55, nH = innerHeight * 0.8;
+        R.setSize(nW, nH); cam.aspect = nW / nH; cam.updateProjectionMatrix();
+        canvas.style.width = nW + 'px'; canvas.style.height = nH + 'px';
+    });
+})();
+
+/* ═══════════════════════════════════════════════
+   ORBITAL NEBULA RINGS  (Section 4 — Manifesto)
+   Concentric glowing torus + star haze
+═══════════════════════════════════════════════ */
+(function initRings() {
+    const canvas = document.getElementById('c-rings');
+    if (!canvas) return;
+    const sec = canvas.closest('.s-manifesto');
+    const W = innerWidth, H = sec ? sec.clientHeight : innerHeight;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+
+    const R = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    R.setPixelRatio(Math.min(devicePixelRatio, 2));
+    R.setSize(W, H);
+    R.setClearColor(0, 0);
+
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(50, W / H, 0.1, 100);
+    cam.position.z = 16;
+
+    const rings = [];
+    [
+        { r: 2.5, c: 0xb040ff, o: 0.22, rx: 1.1, rz: 0.4 },
+        { r: 4.0, c: 0x6633ff, o: 0.09, rx: 0.65, rz: 1.3 },
+        { r: 5.5, c: 0xffffff, o: 0.05, rx: 1.5, rz: 0.8 },
+        { r: 7.2, c: 0xa844ff, o: 0.06, rx: 0.25, rz: 1.9 },
+        { r: 9.0, c: 0x3377ff, o: 0.03, rx: 1.0, rz: 0.3 },
+    ].forEach(cfg => {
+        const g = new THREE.TorusGeometry(cfg.r, 0.018, 8, 300);
+        const m = new THREE.MeshBasicMaterial({ color: cfg.c, transparent: true, opacity: cfg.o });
+        const mesh = new THREE.Mesh(g, m);
+        mesh.rotation.x = cfg.rx; mesh.rotation.z = cfg.rz;
+        scene.add(mesh); rings.push(mesh);
+    });
+
+    // Star dust
+    const SC = 800, sp = new Float32Array(SC * 3), sc = new Float32Array(SC * 3);
+    for (let i = 0; i < SC; i++) {
+        sp[i*3]   = (Math.random() - 0.5) * 50;
+        sp[i*3+1] = (Math.random() - 0.5) * 50;
+        sp[i*3+2] = (Math.random() - 0.5) * 30;
+        const purp = Math.random() < 0.5;
+        sc[i*3] = purp ? 0.5 : 0.9; sc[i*3+1] = purp ? 0.0 : 0.8; sc[i*3+2] = purp ? 0.9 : 1.0;
+    }
+    const sg = new THREE.BufferGeometry();
+    sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+    sg.setAttribute('color', new THREE.BufferAttribute(sc, 3));
+    const sm = new THREE.PointsMaterial({ size: 0.07, vertexColors: true, transparent: true, opacity: 0.28 });
+    const stars = new THREE.Points(sg, sm);
+    scene.add(stars);
+
+    let t = 0;
+    (function tick() {
+        requestAnimationFrame(tick);
+        t += 0.002;
+        rings.forEach((r, i) => { r.rotation.y = t * (0.2 + i * 0.045); });
+        stars.rotation.y = t * 0.015;
+        R.render(scene, cam);
+    })();
+
+    window.addEventListener('resize', () => {
+        const nW = innerWidth, nH = sec ? sec.clientHeight : innerHeight;
+        R.setSize(nW, nH); cam.aspect = nW / nH; cam.updateProjectionMatrix();
+    });
+})();
+
+/* ═══════════════════════════════════════════════
+   HERO VIDEO — BLOOM ONCE, THEN GENTLE BREATHE
+═══════════════════════════════════════════════ */
+const bgVideo   = document.getElementById('bg-video');
+const heroSec   = document.querySelector('.s-hero');
+const videoCont = document.querySelector('.video-container');
+
+/* After bloom ends — start gentle petal-breathe on the frozen last frame */
+if (bgVideo) {
+    bgVideo.addEventListener('ended', () => {
+        if (videoCont) {
+            videoCont.style.animation = 'petal-breathe 7s ease-in-out infinite';
+        }
+    });
+}
+
+/* Scroll blur */
+window.addEventListener('scroll', () => {
+    const p = Math.min(window.scrollY / (heroSec.clientHeight * 0.5), 1);
+    if (bgVideo) {
+        bgVideo.style.filter    = `blur(${p * 22}px)`;
+        bgVideo.style.transform = `scale(${1 + p * 0.09})`;
+    }
+}, { passive: true });
+
+
+
+
+
+
+/* ═══════════════════════════════════════════════
+   INTERSECTION OBSERVER — section reveals
+═══════════════════════════════════════════════ */
+const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.rev, .rev-l').forEach(el => obs.observe(el));
+
+/* ═══════════════════════════════════════════════
+   HERO TEXT SPLITTING
+═══════════════════════════════════════════════ */
+// Letter-by-letter wordmark
+const logoEl = document.querySelector('.hero-logo-text');
+if (logoEl) {
+    const txt = logoEl.textContent.trim(); logoEl.innerHTML = '';
+    [...txt].forEach((ch, i) => {
+        const wr = document.createElement('span'); wr.className = 'letter-wrapper';
+        const inn = document.createElement('span'); inn.className = 'letter-inner';
+        inn.textContent = ch === ' ' ? '\u00A0' : ch;
+        inn.style.animationDelay = `${i * 0.09}s`;
+        wr.appendChild(inn); logoEl.appendChild(wr);
+    });
+}
+// Word-by-word headline
+const titleEl = document.querySelector('.hero-title');
+if (titleEl) {
+    const raw = titleEl.innerHTML;
+    const parts = raw.split(/(\s+|<br\s*\/?>)/i);
+    titleEl.innerHTML = '';
+    let wi = 0;
+    parts.forEach(p => {
+        if (!p) return;
+        if (p.trim() === '') { titleEl.appendChild(document.createTextNode(' ')); return; }
+        if (/^<br/i.test(p)) { titleEl.appendChild(document.createElement('br')); return; }
+        const wr = document.createElement('span'); wr.className = 'word-wrapper';
+        const inn = document.createElement('span'); inn.className = 'word-inner';
+        inn.textContent = p; inn.style.animationDelay = `${wi * 0.1}s`; wi++;
+        wr.appendChild(inn); titleEl.appendChild(wr);
+    });
+}
+
+/* ═══════════════════════════════════════════════
+   CUSTOM CURSOR (LERP physics)
+═══════════════════════════════════════════════ */
+const glassCard  = document.getElementById('glass-card');
+const cursorRing = document.getElementById('cursor-ring');
+let mX = innerWidth / 2, mY = innerHeight / 2, cX = mX, cY = mY;
+let sc = 0, tSc = 0, hovering = false, firstMove = true;
+
+document.addEventListener('mousemove', e => {
+    mX = e.clientX; mY = e.clientY;
+    if (firstMove) { cX = mX; cY = mY; firstMove = false; glassCard.classList.add('active'); cursorRing.classList.add('active'); }
+    if (!hovering) tSc = 1;
+});
+document.addEventListener('mouseleave', () => tSc = 0);
+document.addEventListener('mouseenter', () => { if (!hovering) tSc = 1; });
+
+document.querySelectorAll('.hero-btn,.connect-submit,.connect-input,.footer-link,.social-icon').forEach(el => {
+    el.addEventListener('mouseenter', () => { hovering = true; tSc = 0; cursorRing.classList.add('expanded'); });
+    el.addEventListener('mouseleave', () => { hovering = false; tSc = 1; cursorRing.classList.remove('expanded'); });
+});
+
+(function cursorTick() {
+    requestAnimationFrame(cursorTick);
+    cX += (mX - cX) * 0.08; cY += (mY - cY) * 0.08;
+    sc += (tSc - sc) * 0.15;
+    const rs = cursorRing.classList.contains('expanded') ? 1.6 * sc : sc;
+    glassCard.style.transform  = `translate3d(${cX}px,${cY}px,0) translate(-50%,-50%) scale(${sc})`;
+    cursorRing.style.transform = `translate3d(${mX}px,${mY}px,0) translate(-50%,-50%) scale(${rs})`;
+})();
+</script>
+</body>
+</html>
