@@ -5,15 +5,23 @@ export const HomeView = () => {
   return (
     <main className="min-h-lvh flex items-center justify-center bg-black">
       <div className="text-center px-8">
-        <h1 className="text-6xl font-bold text-white mb-4">
-          Welcome to Loopstack
+        <h1 className="text-7xl font-bold text-white mb-6 tracking-tight">
+          Loopstack
         </h1>
-        <p className="text-xl text-gray-400 mb-8">
-          Built by Prasidh P Shetty
+        <p className="text-2xl text-gray-300 mb-4 font-light">
+          by Prasidh P Shetty
         </p>
-        <p className="text-gray-500">
-          Your Next.js 16 project is successfully deployed on Vercel! 🎉
-        </p>
+        <div className="mt-8 space-y-2">
+          <p className="text-lg text-green-400">
+            ✓ Next.js 16 with Turbopack
+          </p>
+          <p className="text-lg text-green-400">
+            ✓ Successfully deployed on Vercel
+          </p>
+          <p className="text-lg text-green-400">
+            ✓ Ready for development
+          </p>
+        </div>
       </div>
     </main>
   );
